@@ -40,7 +40,6 @@ def get_sheet_values(range_name: str):
         # Save the credentials for the next run
         with open(token_path, 'wb') as token:
             pickle.dump(creds, token)
-
     service = build('sheets', 'v4', credentials=creds)
 
     # Call the Sheets API
