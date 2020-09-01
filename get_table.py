@@ -3,7 +3,7 @@ import datetime
 from data.google_api import get_sheet_values
 
 
-def get_table(group: int, is_tomorrow: bool):
+def get_table(group: int, is_tomorrow: bool, course: int):
     # group = 19144
     is_tomorrow = int(is_tomorrow)
 
@@ -11,7 +11,7 @@ def get_table(group: int, is_tomorrow: bool):
 
     start_column_index = 0 if group == 19137 else 8
 
-    data = get_sheet_values('2 курс!C3:P7')
+    data = get_sheet_values(f'{course} курс!C3:P7')
     time_data = [time[0] for time in get_sheet_values('2 курс!B3:B7')]
 
     today_idx = start_column_index + today
