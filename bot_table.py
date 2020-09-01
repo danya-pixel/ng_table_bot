@@ -98,6 +98,6 @@ def catch_day_of_week(message):
     elif chosen_day == 'поменять группу':
         bot.send_message(message.from_user.id, text='Какая у тебя группа?',
                          reply_markup=generate_keyboard([['19137', '19144'], ['20137', '20144']]))
-
+#TODO: add odd or even week
 
 bot.polling()
