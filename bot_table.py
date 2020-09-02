@@ -5,7 +5,7 @@ from get_table import get_table
 
 bot = telebot.TeleBot('1231314161:AAFNQ-RB_AIaihSEdL8cKoZhoe3YvgzIviQ')
 
-cache = {}
+cache_user = dict()
 
 days_names = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
 days_names_lower = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб']
@@ -13,12 +13,12 @@ days_names_full = ['понедельник', 'вторник', 'среду', 'ч
 
 
 def get_user_cache(chat_id):
-    user = cache[chat_id]
+    user = cache_user[chat_id]
     return user
 
 
 def day_of_week(user, day, is_tomorrow, **kwargs):
-    timetable = get_table(user['group'], day, course=user['course'], is_tomorrow=is_tomorrow)
+    timetable = get_table(group=user['group'], day_of_week=day, course=user['course'], is_tomorrow=is_tomorrow)
     print(user, timetable)
     timetable_prepared = [f'{item[0]}: {item[1]}\n' for item in timetable]
 
@@ -47,7 +47,8 @@ def start_message(message):
     try:
         user = get_user_cache(message.chat.id)
         bot.send_message(message.from_user.id,
-                         text=f'Привет, @{user["username"]}!\nЯ правильно помню, что твоя группа: {user["group"]}?\n'
+                         text=f'Привет{", @" + user["username"] if user["username"] is not None else ""}!\n'
+                              f'Я правильно помню, что твоя группа: {user["group"]}?\n'
                               f'Если я не прав подскажи мне свою группу'
                          , reply_markup=None)
 
@@ -61,17 +62,17 @@ def start_message(message):
 @bot.message_handler(regexp='^\\d{5}$')
 def set_group(message):
     try:
-        cache[message.chat.id] = {
+        cache_user[message.chat.id] = {
             "group": int(message.text),
             "username": message.chat.username,
             "course": (datetime.datetime.now().year // 100 - int(message.text[:2])) + 1,
             "user_id": message.from_user.id
         }
-        user = cache[message.chat.id]
+        user = cache_user[message.chat.id]
 
     except ValueError:
         try:
-            user = cache[message.chat.id]
+            user = cache_user[message.chat.id]
         except KeyError:
             return
 
@@ -86,8 +87,12 @@ def set_group(message):
 
 @bot.message_handler(content_types=['text'])
 def catch_day_of_week(message):
-    user = cache[message.chat.id]
-    chosen_day = message.text.lower()
+    try:
+        user = cache_user[message.chat.id]
+        chosen_day = message.text.lower()
+    except KeyError as err:
+        start_message(message)
+        return
 
     if chosen_day == 'сегодня':
         day_of_week(user=user, day=None, is_tomorrow=False)
@@ -98,6 +103,8 @@ def catch_day_of_week(message):
     elif chosen_day == 'поменять группу':
         bot.send_message(message.from_user.id, text='Какая у тебя группа?',
                          reply_markup=generate_keyboard([['19137', '19144'], ['20137', '20144']]))
-#TODO: add odd or even week
+
+
+# TODO: add odd or even week
 
 bot.polling()

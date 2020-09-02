@@ -2,7 +2,31 @@ import datetime
 
 from data.google_api import get_sheet_values
 
+cache_data_dict = dict()
+cache_data_time = dict()
 
+
+def cache_data(func):
+    import json
+    global cache_data_dict
+
+    def memoized_func(**kwargs):
+        str_kwargs = json.dumps(kwargs)
+        today = datetime.datetime.now()
+        if str_kwargs in cache_data_dict and cache_data_dict[str_kwargs].get('time').day == today.day \
+                and cache_data_dict[str_kwargs].get('time').hour + 4 >= today.hour:
+            return cache_data_dict[str_kwargs]["result"]
+        result = func(**kwargs)
+        cache_data_dict[str_kwargs] = {
+            "result": result,
+            "time": datetime.datetime.now()
+        }
+        return result
+
+    return memoized_func
+
+
+@cache_data
 def get_table(group: int, day_of_week: int, course: int, is_tomorrow: bool = False):
     # group = 19144
     is_tomorrow = int(is_tomorrow)
@@ -22,7 +46,7 @@ def get_table(group: int, day_of_week: int, course: int, is_tomorrow: bool = Fal
             row.append('')
 
     timetable = [row[today_idx].replace('\n', ' ') if row[today_idx] != '' else 'Окно' for row in data]
-    
+
     lessons = list(zip(time_data, timetable))
 
     return lessons
