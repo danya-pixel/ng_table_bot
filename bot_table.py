@@ -1,9 +1,11 @@
 import telebot
 from telebot import types
 import datetime
-from get_table import get_table
+from get_table import get_table, isEven_week
+import os
 
-bot = telebot.TeleBot('1231314161:AAFNQ-RB_AIaihSEdL8cKoZhoe3YvgzIviQ')
+token = os.getenv('TG_TOKEN')
+bot = telebot.TeleBot(token)
 
 cache_user = dict()
 
@@ -29,8 +31,8 @@ def day_of_week(user, day, is_tomorrow, **kwargs):
     else:
         day_name = days_names_full[day]
     bot.send_message(user["user_id"],
-                     text=f'Группа {user["group"]} и ты {"с" if user["course"]==1 else "со"} {user["course"]} курса!\n'
-                          f'Вот твое расписание на {day_name}:\n\n{str_timetable}',
+                     text=f'Группа {user["group"]} и ты {"с" if user["course"] == 1 else "со"} {user["course"]} курса!\n'
+                          f'Вот твое расписание на {day_name} ({"не" if not isEven_week() else ""}четная неделя):\n\n{str_timetable}',
                      **kwargs)
 
 
@@ -103,7 +105,6 @@ def catch_day_of_week(message):
     elif chosen_day == 'поменять группу':
         bot.send_message(message.from_user.id, text='Какая у тебя группа?',
                          reply_markup=generate_keyboard([['19137', '19144'], ['20137', '20144']]))
-
 
 
 bot.polling()
