@@ -29,8 +29,8 @@ def day_of_week(user, day, is_tomorrow, **kwargs):
     else:
         day_name = days_names_full[day]
     bot.send_message(user["user_id"],
-                     text=f'Группа {user["group"]} и ты с {user["course"]} курса!\n'
-                          f'Вот твое расписание на {day_name}:\n{str_timetable}',
+                     text=f'Группа {user["group"]} и ты {"с" if user["course"]==1 else "со"} {user["course"]} курса!\n'
+                          f'Вот твое расписание на {day_name}:\n\n{str_timetable}',
                      **kwargs)
 
 
@@ -105,6 +105,5 @@ def catch_day_of_week(message):
                          reply_markup=generate_keyboard([['19137', '19144'], ['20137', '20144']]))
 
 
-# TODO: add odd or even week
 
 bot.polling()

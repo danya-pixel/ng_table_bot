@@ -4,6 +4,11 @@ from data.google_api import get_sheet_values
 
 cache_data_dict = dict()
 cache_data_time = dict()
+first_week = datetime.date(2020,9,1)
+
+def isEven_week():
+    this_week = datetime.datetime.now().isocalendar()[1]
+    return (this_week-first_week.isocalendar()[1])%2 == 1
 
 
 def cache_data(func):
@@ -36,7 +41,7 @@ def get_table(group: int, day_of_week: int, course: int, is_tomorrow: bool = Fal
         today = day_of_week
     start_column_index = 0 if str(group)[-2:] == "37" else 8
 
-    data = get_sheet_values(f'{course} курс!C3:P7')
+    data = get_sheet_values(f'{course} курс!{"C3:P7" if not isEven_week() else "C10:P14"}')
     time_data = [time[0] for time in get_sheet_values(f'{course} курс!B3:B7')]
 
     today_idx = start_column_index + today
