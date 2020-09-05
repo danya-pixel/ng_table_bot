@@ -1,17 +1,20 @@
-import telebot
-from telebot import types
 import datetime
-from get_table import get_table, isEven_week
 import os
 
+import telebot
+from telebot import types
+
+from get_table import get_table, Day
+
 token = os.getenv('TG_TOKEN')
+if not token:
+    raise ValueError('Token not found. Put it in ENV:TG_TOKEN')
 bot = telebot.TeleBot(token)
 
 cache_user = dict()
 
 days_names = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
 days_names_lower = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб']
-days_names_full = ['понедельник', 'вторник', 'среду', 'четверг', 'пятницу', 'субботу']
 
 
 def get_user_cache(chat_id):
@@ -19,20 +22,18 @@ def get_user_cache(chat_id):
     return user
 
 
-def day_of_week(user, day, is_tomorrow, **kwargs):
-    timetable = get_table(group=user['group'], day_of_week=day, course=user['course'], is_tomorrow=is_tomorrow)
+def send_timetable(user, day_of_week, is_tomorrow, **kwargs):
+    day = Day(day_of_week=day_of_week, is_tomorrow=is_tomorrow)
+    timetable = get_table(group=user['group'], course=user['course'], day=day)
     print(user, timetable)
     timetable_prepared = [f'{item[0]}: {item[1]}\n' for item in timetable]
 
     str_timetable = "\n".join(timetable_prepared)
 
-    if day is None:
-        day_name = "завтра" if is_tomorrow else "сегодня"
-    else:
-        day_name = days_names_full[day]
     bot.send_message(user["user_id"],
-                     text=f'Группа {user["group"]} и ты {"с" if user["course"] == 1 else "со"} {user["course"]} курса!\n'
-                          f'Вот твое расписание на {day_name} ({"не" if not isEven_week() else ""}четная неделя):\n\n{str_timetable}',
+                     text=f'Группа {user["group"]} и ты с{"" if user["course"] == 1 else "о"} {user["course"]} курса!\n'
+                          f'Вот твое расписание на {day.get_full_day_name()} ({"не" if not day.is_even_week else ""}'
+                          f'четная неделя):\n\n{str_timetable}',
                      **kwargs)
 
 
@@ -51,8 +52,8 @@ def start_message(message):
         bot.send_message(message.from_user.id,
                          text=f'Привет{", @" + user["username"] if user["username"] is not None else ""}!\n'
                               f'Я правильно помню, что твоя группа: {user["group"]}?\n'
-                              f'Если я не прав подскажи мне свою группу'
-                         , reply_markup=None)
+                              f'Если я не прав подскажи мне свою группу',
+                         reply_markup=None)
 
     except KeyError:
         bot.send_message(message.from_user.id, text='Привет! Какая у тебя группа?',
@@ -84,7 +85,7 @@ def set_group(message):
     btns_title = [['Сегодня', 'Завтра'], days_names, ['Поменять группу']]
 
     print(days_names_without_current)
-    day_of_week(user=user, day=None, is_tomorrow=False, reply_markup=generate_keyboard(btns_title))
+    send_timetable(user=user, day_of_week=None, is_tomorrow=False, reply_markup=generate_keyboard(btns_title))
 
 
 @bot.message_handler(content_types=['text'])
@@ -97,11 +98,11 @@ def catch_day_of_week(message):
         return
 
     if chosen_day == 'сегодня':
-        day_of_week(user=user, day=None, is_tomorrow=False)
+        send_timetable(user=user, day_of_week=None, is_tomorrow=False)
     elif chosen_day == 'завтра':
-        day_of_week(user=user, day=None, is_tomorrow=True)
+        send_timetable(user=user, day_of_week=None, is_tomorrow=True)
     elif chosen_day in days_names_lower:
-        day_of_week(user=user, day=days_names_lower.index(chosen_day), is_tomorrow=False)
+        send_timetable(user=user, day_of_week=days_names_lower.index(chosen_day), is_tomorrow=False)
     elif chosen_day == 'поменять группу':
         bot.send_message(message.from_user.id, text='Какая у тебя группа?',
                          reply_markup=generate_keyboard([['19137', '19144'], ['20137', '20144']]))
