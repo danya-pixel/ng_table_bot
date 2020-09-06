@@ -14,7 +14,13 @@ bot = telebot.TeleBot(token)
 cache_user = dict()
 
 days_names = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+days_names_chet = [f'{day}\n(ч)' for day in days_names]
+
+days_names_ne_chet = [f'{day}\n(нч)' for day in days_names]
+
 days_names_lower = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб']
+days_names_chet_lower = [f'{day}\n(ч)' for day in days_names_lower]
+days_names_ne_chet_lower = [f'{day}\n(нч)' for day in days_names_lower]
 
 
 def get_user_cache(chat_id):
@@ -22,8 +28,8 @@ def get_user_cache(chat_id):
     return user
 
 
-def send_timetable(user, day_of_week, is_tomorrow, **kwargs):
-    day = Day(day_of_week=day_of_week, is_tomorrow=is_tomorrow)
+def send_timetable(user, day_of_week, is_tomorrow, is_even: bool or None = None, **kwargs):
+    day = Day(day_of_week=day_of_week, is_tomorrow=is_tomorrow, is_even=is_even)
     timetable = get_table(group=user['group'], course=user['course'], day=day)
     print(user, timetable)
     timetable_prepared = [f'{item[0]}: {item[1]}\n' for item in timetable]
@@ -82,7 +88,7 @@ def set_group(message):
     today = datetime.datetime.now().weekday()
     days_names_without_current = ['Сегодня', 'Завтра', *[day for day_idx, day in enumerate(days_names) if
                                                          day_idx not in (today, (today + 1) % 6)]]
-    btns_title = [['Сегодня', 'Завтра'], days_names, ['Поменять группу']]
+    btns_title = [['Сегодня', 'Завтра'], days_names_chet, days_names_ne_chet, ['Поменять группу']]
 
     print(days_names_without_current)
     send_timetable(user=user, day_of_week=None, is_tomorrow=False, reply_markup=generate_keyboard(btns_title))
@@ -101,8 +107,10 @@ def catch_day_of_week(message):
         send_timetable(user=user, day_of_week=None, is_tomorrow=False)
     elif chosen_day == 'завтра':
         send_timetable(user=user, day_of_week=None, is_tomorrow=True)
-    elif chosen_day in days_names_lower:
-        send_timetable(user=user, day_of_week=days_names_lower.index(chosen_day), is_tomorrow=False)
+    elif chosen_day in days_names_chet_lower:
+        send_timetable(user=user, day_of_week=days_names_chet_lower.index(chosen_day), is_tomorrow=False, is_even=True)
+    elif chosen_day in days_names_ne_chet_lower:
+        send_timetable(user=user, day_of_week=days_names_ne_chet_lower.index(chosen_day), is_tomorrow=False, is_even=False)
     elif chosen_day == 'поменять группу':
         bot.send_message(message.from_user.id, text='Какая у тебя группа?',
                          reply_markup=generate_keyboard([['19137', '19144'], ['20137', '20144']]))

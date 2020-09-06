@@ -10,7 +10,7 @@ class Day:
     day: datetime.datetime = None
     days_names_full = ['понедельник', 'вторник', 'среду', 'четверг', 'пятницу', 'субботу']
 
-    def __init__(self, day_of_week: int or None, is_tomorrow: bool = False):
+    def __init__(self, day_of_week: int or None, is_tomorrow: bool = False, is_even: bool or None = None):
         first_week = datetime.date(2020, 9, 1)
         self.today = datetime.datetime.now()
         if day_of_week is None:
@@ -24,6 +24,9 @@ class Day:
             raise ValueError("No correct date")
 
         self.is_even_week = (self.day.isocalendar()[1] - first_week.isocalendar()[1]) % 2 == 1
+        if is_even is not None and self.is_even_week != is_even:
+            self.day += datetime.timedelta(days=7)
+            self.is_even_week = is_even
         self.day_of_week = self.day.weekday()
 
     def get_full_day_name(self):
@@ -36,7 +39,7 @@ class Day:
 def cache_data(func):
     global cache_data_dict
 
-    def memoized_func(group: int, course: int, day: Day, is_need_clean_end: bool = True):
+    def memoized_func(group: int, course: int, day: Day, is_need_clean_end: bool = True, is_even: bool or None = None):
         today = datetime.datetime.now()
         cache_idx = str(day) + f'-{group}:{int(is_need_clean_end)}'
 
@@ -49,7 +52,6 @@ def cache_data(func):
             "time": datetime.datetime.now()
         }
         return result
-
 
     return memoized_func
 
