@@ -51,6 +51,7 @@ def cache_data(func):
             "result": result,
             "time": datetime.datetime.now()
         }
+        init_cache()
         return result
 
     return memoized_func
@@ -86,6 +87,24 @@ def get_table(group: int, course: int, day: Day, is_need_clean_end: bool = True)
 
     return lessons
 
+
+def init_cache():
+    import threading
+    threads = list()
+    print('Start caching')
+    for day_of_week in range(6):
+        day = Day(day_of_week=day_of_week, is_tomorrow=False, is_even=True)
+        day2 = Day(day_of_week=day_of_week, is_tomorrow=False, is_even=False)
+        for group, course in [(19137, 2), (19144, 2), (20137, 1), (20144, 1)]:
+            x = threading.Thread(target=get_table, kwargs=dict(group=group, course=course, day=day))
+            threads.append(x)
+            x.start()
+            x = threading.Thread(target=get_table, kwargs=dict(group=group, course=course, day=day2))
+            threads.append(x)
+            x.start()
+
+    for index, thread in enumerate(threads):
+        thread.join()
 
 if __name__ == '__main__':
     d = Day(day_of_week=None, is_tomorrow=True)
