@@ -110,10 +110,33 @@ def catch_day_of_week(message):
     elif chosen_day in days_names_chet_lower:
         send_timetable(user=user, day_of_week=days_names_chet_lower.index(chosen_day), is_tomorrow=False, is_even=True)
     elif chosen_day in days_names_ne_chet_lower:
-        send_timetable(user=user, day_of_week=days_names_ne_chet_lower.index(chosen_day), is_tomorrow=False, is_even=False)
+        send_timetable(user=user, day_of_week=days_names_ne_chet_lower.index(chosen_day), is_tomorrow=False,
+                       is_even=False)
     elif chosen_day == 'поменять группу':
         bot.send_message(message.from_user.id, text='Какая у тебя группа?',
                          reply_markup=generate_keyboard([['19137', '19144'], ['20137', '20144']]))
 
 
-bot.polling()
+def init_cache():
+    import threading
+    threads = list()
+    print('Start caching')
+    for day_of_week, _ in enumerate(days_names_chet_lower):
+        day = Day(day_of_week=day_of_week, is_tomorrow=False, is_even=True)
+        day2 = Day(day_of_week=day_of_week, is_tomorrow=False, is_even=False)
+        for group, course in [(19137, 2), (19144, 2), (20137, 1), (20144, 1)]:
+            x = threading.Thread(target=get_table, kwargs=dict(group=group, course=course, day=day))
+            threads.append(x)
+            x.start()
+            x = threading.Thread(target=get_table, kwargs=dict(group=group, course=course, day=day2))
+            threads.append(x)
+            x.start()
+
+    for index, thread in enumerate(threads):
+        thread.join()
+
+
+if __name__ == '__main__':
+    init_cache()
+    print('Start polling')
+    bot.polling()
