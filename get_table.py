@@ -36,28 +36,28 @@ class Day:
         return self.day.strftime("%d.%m.%Y")
 
 
-def cache_data(func):
-    global cache_data_dict
+# def cache_data(func):
+#     global cache_data_dict
+#
+#     def memoized_func(group: int, course: int, day: Day, is_need_clean_end: bool = True, is_even: bool or None = None):
+#         today = datetime.datetime.now()
+#         cache_idx = str(day) + f'-{group}:{int(is_need_clean_end)}'
+#
+#         if cache_idx in cache_data_dict and cache_data_dict[cache_idx].get('time').day == today.day \
+#                 and cache_data_dict[cache_idx].get('time').hour + 4 >= today.hour:
+#             return cache_data_dict[cache_idx]['result']
+#         result = func(group=group, course=course, day=day, is_need_clean_end=is_need_clean_end)
+#         cache_data_dict[cache_idx] = {
+#             "result": result,
+#             "time": datetime.datetime.now()
+#         }
+#         init_cache()
+#         return result
+#
+#     return memoized_func
 
-    def memoized_func(group: int, course: int, day: Day, is_need_clean_end: bool = True, is_even: bool or None = None):
-        today = datetime.datetime.now()
-        cache_idx = str(day) + f'-{group}:{int(is_need_clean_end)}'
 
-        if cache_idx in cache_data_dict and cache_data_dict[cache_idx].get('time').day == today.day \
-                and cache_data_dict[cache_idx].get('time').hour + 4 >= today.hour:
-            return cache_data_dict[cache_idx]['result']
-        result = func(group=group, course=course, day=day, is_need_clean_end=is_need_clean_end)
-        cache_data_dict[cache_idx] = {
-            "result": result,
-            "time": datetime.datetime.now()
-        }
-        init_cache()
-        return result
-
-    return memoized_func
-
-
-@cache_data
+# @cache_data
 def get_table(group: int, course: int, day: Day, is_need_clean_end: bool = True):
     # group = 19144
     # is_tomorrow = int(is_tomorrow)
@@ -89,22 +89,24 @@ def get_table(group: int, course: int, day: Day, is_need_clean_end: bool = True)
 
 
 def init_cache():
-    import threading
-    threads = list()
+    # import threading
+    # threads = list()
     print('Start caching')
     for day_of_week in range(6):
         day = Day(day_of_week=day_of_week, is_tomorrow=False, is_even=True)
         day2 = Day(day_of_week=day_of_week, is_tomorrow=False, is_even=False)
         for group, course in [(19137, 2), (19144, 2), (20137, 1), (20144, 1)]:
-            x = threading.Thread(target=get_table, kwargs=dict(group=group, course=course, day=day))
-            threads.append(x)
-            x.start()
-            x = threading.Thread(target=get_table, kwargs=dict(group=group, course=course, day=day2))
-            threads.append(x)
-            x.start()
+            get_table(group=group, course=course, day=day)
+            get_table(group=group, course=course, day=day2)
+            # x = threading.Thread(target=get_table, kwargs=dict(group=group, course=course, day=day))
+            # threads.append(x)
+            # x.start()
+            # x = threading.Thread(target=get_table, kwargs=dict(group=group, course=course, day=day2))
+            # threads.append(x)
+            # x.start()
 
-    for index, thread in enumerate(threads):
-        thread.join()
+    # for index, thread in enumerate(threads):
+    #     thread.join()
 
 if __name__ == '__main__':
     d = Day(day_of_week=None, is_tomorrow=True)

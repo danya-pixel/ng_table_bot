@@ -1,9 +1,12 @@
 from __future__ import print_function
-import pickle
+
+import datetime
 import os.path
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
+import pickle
+
 from google.auth.transport.requests import Request
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
@@ -16,7 +19,26 @@ TOKEN_PATH = 'token.pickle'
 CREDENTIALS_PATH = 'credentials.json'
 CONFIG_PATH = 'data'
 
+cache_sheet_value = {}
 
+
+def cache_sheet(func):
+    def memoized_func(range_name):
+        today = datetime.datetime.now()
+        if range_name in cache_sheet_value and cache_sheet_value[range_name].get('time').day == today.day \
+                and cache_sheet_value[range_name].get('time').hour + 4 >= today.hour:
+            return cache_sheet_value[range_name]['result']
+        result = func(range_name)
+        cache_sheet_value[range_name] = {
+            "result": result,
+            "time": datetime.datetime.now()
+        }
+        return result
+
+    return memoized_func
+
+
+@cache_sheet
 def get_sheet_values(range_name: str):
     """Shows basic usage of the Sheets API.
     Prints values from a sample spreadsheet.
