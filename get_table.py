@@ -68,8 +68,8 @@ def get_table(group: int, course: int, day: Day, is_need_clean_end: bool = True)
     start_column_index = 0 if str(group)[-2:] == "37" else 8
 
     data = get_sheet_values(
-        f'{course} курс!{"C3:P7" if not day.is_even_week else "C10:P14"}')
-    time_data = [time[0] for time in get_sheet_values(f'{course} курс!B3:B7')]
+        f'{course} курс 2 недели!{"D3:Q7" if  day.is_even_week else "D10:Q14"}')
+    time_data = [time[0] for time in get_sheet_values(f'{course} курс 2 недели!C3:C7')]
 
     today_idx = start_column_index + day.day_of_week
 
