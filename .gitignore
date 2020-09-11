@@ -2,4 +2,5 @@
 venv
 .venv
 __pycache__
-*.jog
+*.log
+pull_and_run_bot.sh
